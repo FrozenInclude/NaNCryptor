@@ -1,0 +1,14 @@
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\bin\Debug\NaNCryptor.exe.config
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\bin\Debug\NaNCryptor.exe
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\bin\Debug\NaNCryptor.pdb
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.csprojResolveAssemblyReference.cache
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\MainWindow.g.cs
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\App.g.cs
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor_MarkupCompile.cache
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor_MarkupCompile.lref
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\MainWindow.baml
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.g.resources
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.Properties.Resources.resources
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.csproj.GenerateResource.Cache
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.exe
+c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.pdb
