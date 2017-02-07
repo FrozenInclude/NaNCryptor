@@ -12,3 +12,6 @@ c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCrypt
 c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.csproj.GenerateResource.Cache
 c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.exe
 c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCryptor\obj\Debug\NaNCryptor.pdb
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\bin\Debug\NaNCryptor.exe.config
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.exe
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.pdb
