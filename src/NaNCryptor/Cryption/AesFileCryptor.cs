@@ -56,8 +56,11 @@ namespace NaNCryptor.Cryption
                 {
                     byte[] arr = new byte[openFS.Length];
                     openFS.Read(arr, 0, arr.Length);
+
                     AesCryptoServiceProvider aesCrypto = new AesCryptoServiceProvider();
-                  //  aesCrypto.Mode = CipherMode.CBC;
+                    aesCrypto.Mode = CipherMode.CBC;
+                    aesCrypto.Padding = PaddingMode.PKCS7;
+
                     ICryptoTransform aescrypt = aesCrypto.CreateEncryptor(Key, IV);
                     CryptoStream Crpstream = new CryptoStream(writeFS, aescrypt, CryptoStreamMode.Write);
                     Crpstream.Write(arr, 0, arr.Length);
@@ -92,6 +95,9 @@ namespace NaNCryptor.Cryption
                 using (StreamWriter DwriteFS = new StreamWriter(this._Doutputpath))
                 {
                     AesCryptoServiceProvider aesDrypto = new AesCryptoServiceProvider();
+                    aesDrypto.Mode = CipherMode.CBC;
+                    aesDrypto.Padding = PaddingMode.PKCS7;
+
                     ICryptoTransform aesdcrypt = aesDrypto.CreateDecryptor(Key, IV);
                     CryptoStream cryptosteam = new CryptoStream(DopenFS, aesdcrypt, CryptoStreamMode.Read);
                     DwriteFS.Write(new StreamReader(cryptosteam).ReadToEnd());
@@ -110,12 +116,13 @@ namespace NaNCryptor.Cryption
                 {
                     byte[] binarydata = new byte[inoutstream.Length];
                     byte[] hashValue;
+                    int bytesRead;
+                    byte[] buffer = new byte[1024];
+
                     inoutstream.Read(binarydata, 0, binarydata.Length);
                     hashValue = hmac.ComputeHash(binarydata);
                     inoutstream.Position = 0;
                     inoutstream.Write(hashValue, 0, hashValue.Length);
-                    int bytesRead;
-                    byte[] buffer = new byte[1024];
                     do
                     {
                         bytesRead = inoutstream.Read(buffer, 0, 1024);
@@ -143,5 +150,9 @@ namespace NaNCryptor.Cryption
                 }
             }
         }
-        }
-        }
+    }
+}
+
+
+
+
