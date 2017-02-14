@@ -15,3 +15,14 @@ c:\users\administrator\documents\visual studio 2015\Projects\NaNCryptor\NaNCrypt
 C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\bin\Debug\NaNCryptor.exe.config
 C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.exe
 C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.pdb
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\bin\Debug\NaNCryptor.exe
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\bin\Debug\NaNCryptor.pdb
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.csprojResolveAssemblyReference.cache
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\MainWindow.g.cs
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\App.g.cs
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor_MarkupCompile.cache
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor_MarkupCompile.lref
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\MainWindow.baml
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.g.resources
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.Properties.Resources.resources
+C:\Users\Administrator\Documents\Visual Studio 2015\Projects\NaNCryptor\src\NaNCryptor\obj\Debug\NaNCryptor.csproj.GenerateResource.Cache
