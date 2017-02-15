@@ -77,8 +77,8 @@ namespace NaNCryptor.Cryption
                     openFS.Read(arr, 0, arr.Length);
 
                     AesCryptoServiceProvider aesCrypto = new AesCryptoServiceProvider();
-                    aesCrypto.Mode = CipherMode.CBC;
-                    aesCrypto.Padding = PaddingMode.PKCS7;
+                    aesCrypto.Mode = this.mode;
+                    aesCrypto.Padding = this.padding;
 
                     ICryptoTransform aescrypt = aesCrypto.CreateEncryptor(Key, IV);
                     CryptoStream Crpstream = new CryptoStream(writeFS, aescrypt, CryptoStreamMode.Write);
@@ -115,8 +115,8 @@ namespace NaNCryptor.Cryption
                 using (StreamWriter DwriteFS = new StreamWriter(this.Decoutputpath))
                 {
                     AesCryptoServiceProvider aesDrypto = new AesCryptoServiceProvider();
-                    aesDrypto.Mode = CipherMode.CBC;
-                    aesDrypto.Padding = PaddingMode.PKCS7;
+                    aesDrypto.Mode = this.mode;
+                    aesDrypto.Padding = this.padding;
 
                     ICryptoTransform aesdcrypt = aesDrypto.CreateDecryptor(Key, IV);
                     CryptoStream cryptosteam = new CryptoStream(DopenFS, aesdcrypt, CryptoStreamMode.Read);

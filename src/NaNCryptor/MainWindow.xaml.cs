@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using NaNCryptor.Cryption;
+using NaNCryptor.MVVM;
 namespace NaNCryptor
 {
     /// <summary>
@@ -23,18 +24,7 @@ namespace NaNCryptor
         public MainWindow()
         {
             InitializeComponent();
-        }
-       private void success()
-        {
-            MessageBox.Show("ralralralnom");
-        }
-        private void button_Click(object sender, RoutedEventArgs e)
-        {
-            AesFileCryptor a = new AesFileCryptor();
-           a.setEnCryptorPath(@"C:\write.txt", @"c:\writqe.en");
-           a.Encrypt("16",success);
-          a.setDeCryptorPath(@"C:\writqe.en", @"c:\writese.txt");
-          a.Decrypt("16",success);
+            this.DataContext = new MainViewModel();//connection viewmodel
         }
     }
 }
