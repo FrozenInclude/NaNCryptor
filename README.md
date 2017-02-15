@@ -1,2 +1,2 @@
 # NaNCryptor
-the File cryptor written in c#
+the File crypter written in c#
