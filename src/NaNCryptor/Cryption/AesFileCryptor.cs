@@ -17,11 +17,28 @@ namespace NaNCryptor.Cryption
         /// CallBack delegate for en/decryption success notification
         /// </summary>
         public delegate void SuccessCallback();
-        private string _inputpath;
-        private string _outputpath;
-        private string _Dinputpath;
-        private string _Doutputpath;
-        public AesFileCryptor() { }
+
+        public string inputpath { get; private set; }
+        public string outputpath { get; private set; }
+        public string Decinputpath { get; private set; }
+        public string Decoutputpath { get; private set; }
+
+        private CipherMode mode;
+        private PaddingMode padding;
+
+        /// <summary>
+        ///<para>Default settings</para>
+        /// <para>CipherMode:<seealso cref="CipherMode.CBC"/></para>
+        ///<para>PaddingMode:<seealso cref="PaddingMode.PKCS7"/></para>
+        /// </summary>
+        public AesFileCryptor() : this(CipherMode.CBC,PaddingMode.PKCS7) { }
+        public AesFileCryptor(CipherMode cipermod) : this(cipermod, PaddingMode.PKCS7) { }
+        public AesFileCryptor(PaddingMode padmod) : this(CipherMode.CBC,padmod) { }
+        public AesFileCryptor(CipherMode cipermod,PaddingMode padmod)
+        {
+           this.mode = cipermod;
+           this.padding =padmod;
+        }
        
         /// <summary>
         /// set encryption target file.
@@ -29,18 +46,20 @@ namespace NaNCryptor.Cryption
         public void setEnCryptorPath(string input, string output)
         {
             if (!File.Exists(input)) throw new FileNotFoundException("Input path was wrong!");
-            this._inputpath = input;
-            this._outputpath = output;
+            this.inputpath = input;
+            this.outputpath = output;
         }
+
         /// <summary>
         /// set decryption target file.
         /// </summary>
         public void setDeCryptorPath(string input, string output)
         {
             if (!File.Exists(input)) throw new FileNotFoundException("Input path was wrong!");
-            this._Dinputpath = input;
-            this._Doutputpath = output;
+            this.Decinputpath = input;
+            this.Decoutputpath = output;
         }
+
         /// <summary>encrypt target file with aes256
         /// <para>return true If Encryption is success</para>
         /// </summary>
@@ -50,9 +69,9 @@ namespace NaNCryptor.Cryption
             PasswordDeriveBytes secret = new PasswordDeriveBytes(password, Salt);
             byte[] Key = secret.GetBytes(32);
             byte[] IV = secret.GetBytes(16);
-            using (FileStream openFS = new FileStream(this._inputpath, FileMode.Open, FileAccess.Read))
+            using (FileStream openFS = new FileStream(this.inputpath, FileMode.Open, FileAccess.Read))
             {
-                using (FileStream writeFS = new FileStream(this._outputpath, FileMode.Create, FileAccess.Write))
+                using (FileStream writeFS = new FileStream(this.outputpath, FileMode.Create, FileAccess.Write))
                 {
                     byte[] arr = new byte[openFS.Length];
                     openFS.Read(arr, 0, arr.Length);
@@ -73,6 +92,7 @@ namespace NaNCryptor.Cryption
             callback?.Invoke();
             return true;
         }
+
         /// <summary>decrypt target file with aes256
         /// <para>return true If Decryption is success</para>
         /// </summary>
@@ -89,10 +109,10 @@ namespace NaNCryptor.Cryption
                return false;
             }
 
-            using (FileStream DopenFS = new FileStream(this._Dinputpath, FileMode.Open, FileAccess.Read))
+            using (FileStream DopenFS = new FileStream(this.Decinputpath, FileMode.Open, FileAccess.Read))
             {
                 DopenFS.Position = 32;//sha 256's size is always 32bytes
-                using (StreamWriter DwriteFS = new StreamWriter(this._Doutputpath))
+                using (StreamWriter DwriteFS = new StreamWriter(this.Decoutputpath))
                 {
                     AesCryptoServiceProvider aesDrypto = new AesCryptoServiceProvider();
                     aesDrypto.Mode = CipherMode.CBC;
@@ -112,7 +132,7 @@ namespace NaNCryptor.Cryption
         {
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {
-                using (FileStream inoutstream = new FileStream(this._outputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                using (FileStream inoutstream = new FileStream(this.outputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
                     byte[] binarydata = new byte[inoutstream.Length];
                     byte[] hashValue;
@@ -133,11 +153,12 @@ namespace NaNCryptor.Cryption
             }
             return;
         }
+
         private bool VerifyFile(byte[] key)
         {
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {
-                using (FileStream inoutstream = new FileStream(this._Dinputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                using (FileStream inoutstream = new FileStream(this.Decinputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
                     int hashsize=(hmac.HashSize / 8);
                     byte[] binarydata = new byte[hashsize];
