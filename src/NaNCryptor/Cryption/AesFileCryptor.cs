@@ -23,6 +23,7 @@ namespace NaNCryptor.Cryption
         public string Decinputpath { get; private set; }
         public string Decoutputpath { get; private set; }
 
+        private readonly byte[] signature = Encoding.UTF8.GetBytes(("AES"));
         private CipherMode mode;
         private PaddingMode padding;
 
@@ -111,7 +112,7 @@ namespace NaNCryptor.Cryption
 
             using (FileStream DopenFS = new FileStream(this.Decinputpath, FileMode.Open, FileAccess.Read))
             {
-                DopenFS.Position = 32;//sha 256's size is always 32bytes
+                DopenFS.Position = (32+signature.Length);//sha 256's size is always 32bytes
                 using (StreamWriter DwriteFS = new StreamWriter(this.Decoutputpath))
                 {
                     AesCryptoServiceProvider aesDrypto = new AesCryptoServiceProvider();
@@ -142,6 +143,7 @@ namespace NaNCryptor.Cryption
                     inoutstream.Read(binarydata, 0, binarydata.Length);
                     hashValue = hmac.ComputeHash(binarydata);
                     inoutstream.Position = 0;
+                    inoutstream.Write(signature, 0, signature.Length);
                     inoutstream.Write(hashValue, 0, hashValue.Length);
                     do
                     {
@@ -162,12 +164,15 @@ namespace NaNCryptor.Cryption
                 {
                     int hashsize=(hmac.HashSize / 8);
                     byte[] binarydata = new byte[hashsize];
-                    byte[] checksum = new byte[inoutstream.Length - hashsize];
-                    byte[] hashvalue;
-                    inoutstream.Read(binarydata, 0,hashsize);
-                    inoutstream.Read(checksum, 0,(int)inoutstream.Length - hashsize);
-                    hashvalue= hmac.ComputeHash(checksum); 
-                    return binarydata.SequenceEqual(hmac.ComputeHash(checksum));
+                    byte[] checksum = new byte[(inoutstream.Length - hashsize)- signature.Length];
+                    byte[] sig = new byte[this.signature.Length];
+
+                   inoutstream.Read(sig, 0, sig.Length);
+                   if(!sig.SequenceEqual(this.signature))return (sig==signature);
+                   inoutstream.Read(binarydata, 0,hashsize);
+                   inoutstream.Read(checksum, 0,checksum.Length);
+
+                   return binarydata.SequenceEqual(hmac.ComputeHash(checksum));
                 }
             }
         }
