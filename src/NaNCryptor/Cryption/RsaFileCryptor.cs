@@ -22,22 +22,13 @@ namespace NaNCryptor.Cryption
         public string outputpath { get; private set; }
         public string Decinputpath { get; private set; }
         public string Decoutputpath { get; private set; }
-
-        private CipherMode mode;
-        private PaddingMode padding;
-
         private readonly byte[] signature = Encoding.UTF8.GetBytes(("RSA"));
 
-        public RsaFileCryptor() : this(CipherMode.CBC, PaddingMode.PKCS7) { }
-        public RsaFileCryptor(CipherMode cipermod) : this(cipermod, PaddingMode.PKCS7) { }
-        public RsaFileCryptor(PaddingMode padmod) : this(CipherMode.CBC, padmod) { }
-        public RsaFileCryptor(CipherMode cipermod, PaddingMode padmod)
+    
+        public RsaFileCryptor( )
         {
-            this.mode = cipermod;
-            this.padding = padmod;
+         
         }
-
-       
 
         /// <summary>
         /// set encryption target file.
@@ -58,32 +49,94 @@ namespace NaNCryptor.Cryption
             this.Decinputpath = input;
             this.Decoutputpath = output;
         }
-
-        public bool Encrypt(string password, SuccessCallback callback = null)
+        public void GenerateKey(string ContainerName,string PulicKeyFileOutputPath, string PrivateKeyFileOutputPath)
         {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            const string providername = "Microsoft Strong Cryptographic Provider";
+            const int PROVIDER_RSA_FULL = 1;
+
+            CspParameters cspParams;
+            cspParams = new CspParameters(PROVIDER_RSA_FULL);
+            cspParams.KeyContainerName = ContainerName;
+            cspParams.Flags = CspProviderFlags.UseMachineKeyStore;
+            cspParams.ProviderName =providername ;
+
+            RSACryptoServiceProvider  rsa = new RSACryptoServiceProvider(2048,cspParams);
             RSAParameters privateKey = RSA.Create().ExportParameters(true);
+
             rsa.ImportParameters(privateKey);
             string privateKeyText = rsa.ToXmlString(true);
 
-            // 공개키 생성
             RSAParameters publicKey = new RSAParameters();
             publicKey.Modulus = privateKey.Modulus;
             publicKey.Exponent = privateKey.Exponent;
+
             rsa.ImportParameters(publicKey);
             string publicKeyText = rsa.ToXmlString(false);
 
-            rsa.FromXmlString(password);
-            //암호화할 문자열을 UFT8인코딩
-         //   using 
-            //암호화
-         //   byte[] encbuf = rsa.Encrypt(inbuf, false);
-      
-            callback?.Invoke();
-            return true;
-         }
-        public bool Decrypt(string password, SuccessCallback callback = null)
+            StreamWriter output1 = new StreamWriter(PulicKeyFileOutputPath);
+            output1.Write(publicKeyText,0,publicKeyText.Length);
+
+            StreamWriter output2 = new StreamWriter(PrivateKeyFileOutputPath);
+            output2.Write(privateKeyText, 0, privateKeyText.Length);
+
+            output1.Close();
+            output2.Close();
+        }
+        public bool Encrypt(string publickey, SuccessCallback callback = null)
         {
+            if (inputpath == null || outputpath == null) return false;
+            string publickeyxml;
+            using (StreamReader publick = new StreamReader(publickey))
+            {
+               publickeyxml=publick.ReadToEnd();
+                publick.Close();
+                using (FileStream openFS = new FileStream(this.inputpath, FileMode.Open, FileAccess.Read))
+                {
+                    byte[] data = new byte[openFS.Length];
+                    openFS.Read(data, 0, data.Length);
+                    openFS.Close();
+                    using (FileStream writeFS = new FileStream(this.outputpath, FileMode.Create, FileAccess.Write))
+                    {
+                        using (RSACryptoServiceProvider provider = new RSACryptoServiceProvider(2048))
+                        {
+                            //temporarily hard coding;
+                            provider.FromXmlString("<RSAKeyValue><Modulus>2VOtymNxhCEJoHKlGWipNCzCYAZTbzOxoxcZ2bOQvAU5A8VSB6p/LDr9LywdpoP917e4F0uzh+VLXlTNEf5bCWwk16W7rpP3Bz9S0Q1w5Jm6ZJSuTI762OSUTvFXf9wy9efZgCnhDGZgLT5f7//BSemuGblJj9JV93Vu6srYRtM=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>");
+                            byte[] encryptedByte=provider.Encrypt(data, false);
+                            writeFS.Write(encryptedByte, 0, encryptedByte.Length);
+                            writeFS.Close();
+                        }
+                    }
+                }
+            }
+                callback?.Invoke();
+                return true;
+        }
+        public bool Decrypt(string privatekey, SuccessCallback callback = null)
+        {
+            if (Decinputpath == null || Decoutputpath == null) { return false; }
+            string privatekeyxml;
+            using (StreamReader publick = new StreamReader(privatekey))
+            {
+                privatekeyxml = publick.ReadToEnd();
+                publick.Close();
+                using (FileStream openFS = new FileStream(this.Decinputpath, FileMode.Open, FileAccess.Read))
+                {
+                    byte[] data = new byte[openFS.Length];
+                    openFS.Read(data, 0, data.Length);
+                    using (FileStream writeFS = new FileStream(this.Decoutputpath, FileMode.Create, FileAccess.Write))
+                    {
+                        using (RSACryptoServiceProvider provider = new RSACryptoServiceProvider(2048))
+                        {
+                            //temporarily hard coding;
+                            provider.FromXmlString("<RSAKeyValue><Modulus>2VOtymNxhCEJoHKlGWipNCzCYAZTbzOxoxcZ2bOQvAU5A8VSB6p/LDr9LywdpoP917e4F0uzh+VLXlTNEf5bCWwk16W7rpP3Bz9S0Q1w5Jm6ZJSuTI762OSUTvFXf9wy9efZgCnhDGZgLT5f7//BSemuGblJj9JV93Vu6srYRtM=</Modulus><Exponent>AQAB</Exponent><P>4nWZ/lSHrYlAxkHkVkfwSWurw1zUxQ+soUBmeXmQRCTucBImpQeQw7qRTJ7GxLPSpmq0jxlv67/XPq+GBuZbnQ==</P><Q>9a0bEGk5ftco99yGhaDMM1m75Sht/qa4D0UTgzS43REofVy4Cl0cnvskLnCretBJsOsVxfE1oCodBWr31u25Lw==</Q><DP>29h9Whmn6gGQH6hCSrzl+fEMO8m4SWLRHW5OzWkFdBJCZAxK9fVlRY6uliqiHr3QJ3z5st5n9/8ysAloXPRvRQ==</DP><DQ>BW+BC8noNcA47dL5PvehzPkNSTKtzFaP9/aFSf/enzWD+dIVWFVbDsFruYNQp/T3zGxHHQwLLbIA1l/Zf+3ejQ==</DQ><InverseQ>gKdVYE9mIOqbMEdrST94iAp3YfII1pZ8Yl1L7kKza/hPX0kN6Vr9wok9UCr8GJc62UrxYJEELGIHCxxxdaz4Jg==</InverseQ><D>S22Jkgb1rSAyUSe5OZpjr6IhTGalqqDMdIheBnsWLsu5QB/KGrMINHe8zBSJrfN9tNMk56D0jKP+hpz0F9yqB3VNUGgLdcxQMBZZ82YZlaKHPQlSLP4JojM3Op435LD9dv5+59C1Pdzt22dEloCUOy7hy5xFYdZTQsBqRuv0WtE=</D></RSAKeyValue>");
+                            byte[] encryptedByte = provider.Decrypt(data, false);
+                            writeFS.Write(encryptedByte, 0, encryptedByte.Length);
+                            writeFS.Close();
+                        }
+                    }
+                }
+            }
+            callback?.Invoke();
             return true;
         }
 

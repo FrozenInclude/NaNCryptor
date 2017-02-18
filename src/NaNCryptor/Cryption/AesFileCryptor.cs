@@ -66,6 +66,8 @@ namespace NaNCryptor.Cryption
         /// </summary>
         public bool Encrypt(string password,SuccessCallback callback=null)
         {
+            if (inputpath == null||outputpath==null) return false;
+
             byte[] Salt = Encoding.ASCII.GetBytes(((password.Length).ToString()));
             PasswordDeriveBytes secret = new PasswordDeriveBytes(password, Salt);
             byte[] Key = secret.GetBytes(32);
@@ -99,6 +101,8 @@ namespace NaNCryptor.Cryption
         /// </summary>
         public bool Decrypt(string password, SuccessCallback callback = null)
         {
+            if (Decinputpath == null || Decoutputpath == null) return false;
+
             byte[] Salt = Encoding.ASCII.GetBytes(((password.Length).ToString()));
             PasswordDeriveBytes secret = new PasswordDeriveBytes(password, Salt);
             byte[] Key = secret.GetBytes(32);
