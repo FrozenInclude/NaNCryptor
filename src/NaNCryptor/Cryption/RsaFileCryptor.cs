@@ -49,6 +49,7 @@ namespace NaNCryptor.Cryption
             this.Decinputpath = input;
             this.Decoutputpath = output;
         }
+
         public void GenerateKey(string ContainerName,string PulicKeyFileOutputPath, string PrivateKeyFileOutputPath)
         {
             const string providername = "Microsoft Strong Cryptographic Provider";
@@ -82,28 +83,33 @@ namespace NaNCryptor.Cryption
             output1.Close();
             output2.Close();
         }
+
         public bool Encrypt(string publickey, SuccessCallback callback = null)
         {
             if (inputpath == null || outputpath == null) return false;
-            string publickeyxml;
+            if (!File.Exists(publickey)) throw new FileNotFoundException("Public Key File path was wrong!"); 
+
             using (StreamReader publick = new StreamReader(publickey))
             {
-               publickeyxml=publick.ReadToEnd();
+                string publickeyxml;
+                publickeyxml =publick.ReadToEnd();
                 publick.Close();
+
                 using (FileStream openFS = new FileStream(this.inputpath, FileMode.Open, FileAccess.Read))
                 {
                     byte[] data = new byte[openFS.Length];
                     openFS.Read(data, 0, data.Length);
                     openFS.Close();
+
                     using (FileStream writeFS = new FileStream(this.outputpath, FileMode.Create, FileAccess.Write))
                     {
                         using (RSACryptoServiceProvider provider = new RSACryptoServiceProvider(2048))
                         {
-                            //temporarily hard coding;
-                            provider.FromXmlString("<RSAKeyValue><Modulus>2VOtymNxhCEJoHKlGWipNCzCYAZTbzOxoxcZ2bOQvAU5A8VSB6p/LDr9LywdpoP917e4F0uzh+VLXlTNEf5bCWwk16W7rpP3Bz9S0Q1w5Jm6ZJSuTI762OSUTvFXf9wy9efZgCnhDGZgLT5f7//BSemuGblJj9JV93Vu6srYRtM=</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>");
+                            provider.FromXmlString(publickeyxml);
                             byte[] encryptedByte=provider.Encrypt(data, false);
                             writeFS.Write(encryptedByte, 0, encryptedByte.Length);
                             writeFS.Close();
+                            SignFile();
                         }
                     }
                 }
@@ -111,27 +117,49 @@ namespace NaNCryptor.Cryption
                 callback?.Invoke();
                 return true;
         }
+
         public bool Decrypt(string privatekey, SuccessCallback callback = null)
         {
             if (Decinputpath == null || Decoutputpath == null) { return false; }
-            string privatekeyxml;
-            using (StreamReader publick = new StreamReader(privatekey))
+            if (!File.Exists(privatekey)) throw new FileNotFoundException("Public Key File path was wrong!");
+
+            if (!VerifyFile())//hash checksum
             {
-                privatekeyxml = publick.ReadToEnd();
-                publick.Close();
+                MessageBox.Show("signed Hash value is not right!");
+                return false;
+            }
+
+            using (StreamReader privatek = new StreamReader(privatekey))
+            {
+                string privatekeyxml;
+
+                privatekeyxml = privatek.ReadToEnd();
+                privatek.Close();
+
                 using (FileStream openFS = new FileStream(this.Decinputpath, FileMode.Open, FileAccess.Read))
                 {
-                    byte[] data = new byte[openFS.Length];
+                    int dataLength = (int)openFS.Length - (32 + signature.Length);
+                    byte[] data = new byte[dataLength];
+
+                    openFS.Position = (32 + signature.Length);
                     openFS.Read(data, 0, data.Length);
+                
                     using (FileStream writeFS = new FileStream(this.Decoutputpath, FileMode.Create, FileAccess.Write))
                     {
                         using (RSACryptoServiceProvider provider = new RSACryptoServiceProvider(2048))
                         {
-                            //temporarily hard coding;
-                            provider.FromXmlString("<RSAKeyValue><Modulus>2VOtymNxhCEJoHKlGWipNCzCYAZTbzOxoxcZ2bOQvAU5A8VSB6p/LDr9LywdpoP917e4F0uzh+VLXlTNEf5bCWwk16W7rpP3Bz9S0Q1w5Jm6ZJSuTI762OSUTvFXf9wy9efZgCnhDGZgLT5f7//BSemuGblJj9JV93Vu6srYRtM=</Modulus><Exponent>AQAB</Exponent><P>4nWZ/lSHrYlAxkHkVkfwSWurw1zUxQ+soUBmeXmQRCTucBImpQeQw7qRTJ7GxLPSpmq0jxlv67/XPq+GBuZbnQ==</P><Q>9a0bEGk5ftco99yGhaDMM1m75Sht/qa4D0UTgzS43REofVy4Cl0cnvskLnCretBJsOsVxfE1oCodBWr31u25Lw==</Q><DP>29h9Whmn6gGQH6hCSrzl+fEMO8m4SWLRHW5OzWkFdBJCZAxK9fVlRY6uliqiHr3QJ3z5st5n9/8ysAloXPRvRQ==</DP><DQ>BW+BC8noNcA47dL5PvehzPkNSTKtzFaP9/aFSf/enzWD+dIVWFVbDsFruYNQp/T3zGxHHQwLLbIA1l/Zf+3ejQ==</DQ><InverseQ>gKdVYE9mIOqbMEdrST94iAp3YfII1pZ8Yl1L7kKza/hPX0kN6Vr9wok9UCr8GJc62UrxYJEELGIHCxxxdaz4Jg==</InverseQ><D>S22Jkgb1rSAyUSe5OZpjr6IhTGalqqDMdIheBnsWLsu5QB/KGrMINHe8zBSJrfN9tNMk56D0jKP+hpz0F9yqB3VNUGgLdcxQMBZZ82YZlaKHPQlSLP4JojM3Op435LD9dv5+59C1Pdzt22dEloCUOy7hy5xFYdZTQsBqRuv0WtE=</D></RSAKeyValue>");
-                            byte[] encryptedByte = provider.Decrypt(data, false);
-                            writeFS.Write(encryptedByte, 0, encryptedByte.Length);
+                            provider.FromXmlString(privatekeyxml);
+                             try
+                             {
+                                byte[] encryptedByte = provider.Decrypt(data, false);
+                                writeFS.Write(encryptedByte, 0, encryptedByte.Length);
+                              }
+                             catch (CryptographicException E)
+                             {
+                             return false;
+                             }
                             writeFS.Close();
+
                         }
                     }
                 }
@@ -140,36 +168,32 @@ namespace NaNCryptor.Cryption
             return true;
         }
 
-
-        private void SignFile(byte[] key)
+        private void SignFile()
         {
+            byte[] key = Encoding.UTF8.GetBytes("NaNCryptor");
+
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {
                 using (FileStream inoutstream = new FileStream(this.outputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
                     byte[] binarydata = new byte[inoutstream.Length];
                     byte[] hashValue;
-                    int bytesRead;
-                    byte[] buffer = new byte[1024];
 
                     inoutstream.Read(binarydata, 0, binarydata.Length);
                     hashValue = hmac.ComputeHash(binarydata);
                     inoutstream.Position = 0;
                     inoutstream.Write(signature, 0, signature.Length);
                     inoutstream.Write(hashValue, 0, hashValue.Length);
-                    do
-                    {
-                        bytesRead = inoutstream.Read(buffer, 0, 1024);
-                        inoutstream.Write(buffer, 0, bytesRead);
-                    } while (bytesRead > 0);
                     inoutstream.Write(binarydata, 0, binarydata.Length);
                 }
             }
             return;
         }
 
-        private bool VerifyFile(byte[] key)
+        private bool VerifyFile()
         {
+            byte[] key = Encoding.UTF8.GetBytes("NaNCryptor");
+
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {
                 using (FileStream inoutstream = new FileStream(this.Decinputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))

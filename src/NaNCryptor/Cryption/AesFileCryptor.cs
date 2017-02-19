@@ -72,6 +72,7 @@ namespace NaNCryptor.Cryption
             PasswordDeriveBytes secret = new PasswordDeriveBytes(password, Salt);
             byte[] Key = secret.GetBytes(32);
             byte[] IV = secret.GetBytes(16);
+
             using (FileStream openFS = new FileStream(this.inputpath, FileMode.Open, FileAccess.Read))
             {
                 using (FileStream writeFS = new FileStream(this.outputpath, FileMode.Create, FileAccess.Write))

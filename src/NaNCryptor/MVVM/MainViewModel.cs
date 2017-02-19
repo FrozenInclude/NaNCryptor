@@ -49,12 +49,12 @@ namespace NaNCryptor.MVVM
                 a.Encrypt("16", success);
                 a.setDeCryptorPath(@"C:\writqe.en", @"c:\writese.txt");
                 a.Decrypt("16", success);*/
-            RsaFileCryptor a = new RsaFileCryptor();
+           RsaFileCryptor a = new RsaFileCryptor();
             a.GenerateKey("nimi", @"C:\nimi.public",@"C:\nimi.private");
              a.setEnCryptorPath(@"C:\write.txt", @"c:\writqe.enz");
            a.Encrypt(@"C:\nimi.public", success);
          a.setDeCryptorPath(@"C:\writqe.enz", @"c:\writeseq.txt");
-         a.Decrypt(@"C:\nimi.private", success); 
+         a.Decrypt(@"C:\nimi.private", success);
         }
         private void success()
         {
