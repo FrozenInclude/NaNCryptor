@@ -42,6 +42,9 @@ namespace NaNCryptor.MVVM
         {
             if (true) return true;
         }
+
+        private Func<string,DialogResult> notification = (str) => MessageBox.Show(str); 
+
         private void encryption()
         {
             /*    AesFileCryptor a = new AesFileCryptor();
@@ -51,14 +54,14 @@ namespace NaNCryptor.MVVM
                 a.Decrypt("16", success);*/
            RsaFileCryptor a = new RsaFileCryptor();
             a.GenerateKey("nimi", @"C:\nimi.public",@"C:\nimi.private");
-             a.setEnCryptorPath(@"C:\write.txt", @"c:\writqe.enz");
+             a.SetEnCryptionPath(@"C:\write.txt", @"c:\writqe.enz");
            a.Encrypt(@"C:\nimi.public", success);
-         a.setDeCryptorPath(@"C:\writqe.enz", @"c:\writeseq.txt");
+         a.SetDeCryptionPath(@"C:\writqe.enz", @"c:\writeseq.txt");
          a.Decrypt(@"C:\nimi.private", success);
         }
         private void success()
         {
-            MessageBox.Show("ralralralnom");
+            notification.DynamicInvoke("성공!");
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

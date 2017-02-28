@@ -18,50 +18,57 @@ namespace NaNCryptor.Cryption
         /// </summary>
         public delegate void SuccessCallback();
 
-        public string inputpath { get; private set; }
-        public string outputpath { get; private set; }
-        public string Decinputpath { get; private set; }
-        public string Decoutputpath { get; private set; }
-        private readonly byte[] signature = Encoding.UTF8.GetBytes(("RSA"));
+        public string encryptInputFilePath { get; private set; }
+        public string encryptOutputFilePath { get; private set; }
+        public string decryptInputFilePath { get; private set; }
+        public string decryptOutputFilePath { get; private set; }
 
-    
-        public RsaFileCryptor( )
+        private readonly byte[] _signature = Encoding.UTF8.GetBytes(("RSA"));
+        private int _rsaKeySize;
+
+        public RsaFileCryptor(int KeySize = 2048)
         {
-         
+            this._rsaKeySize = KeySize;
         }
+       
 
         /// <summary>
         /// set encryption target file.
         /// </summary>
-        public void setEnCryptorPath(string input, string output)
+        public void SetEnCryptionPath(string input, string output)
         {
             if (!File.Exists(input)) throw new FileNotFoundException("Input path was wrong!");
-            this.inputpath = input;
-            this.outputpath = output;
+
+            this.encryptInputFilePath = input;
+            this.encryptOutputFilePath = output;
         }
 
         /// <summary>
         /// set decryption target file.
         /// </summary>
-        public void setDeCryptorPath(string input, string output)
+        public void SetDeCryptionPath(string input, string output)
         {
             if (!File.Exists(input)) throw new FileNotFoundException("Input path was wrong!");
-            this.Decinputpath = input;
-            this.Decoutputpath = output;
+
+            this.decryptInputFilePath = input;
+            this.decryptOutputFilePath = output;
         }
 
-        public void GenerateKey(string ContainerName,string PulicKeyFileOutputPath, string PrivateKeyFileOutputPath)
+        /// <summary>
+        /// generate key xml file for RSA
+        /// </summary>
+        public void GenerateKey(string containerName,string pulicKeyFileOutputPath, string privateKeyFileOutputPath)
         {
             const string providername = "Microsoft Strong Cryptographic Provider";
             const int PROVIDER_RSA_FULL = 1;
 
             CspParameters cspParams;
             cspParams = new CspParameters(PROVIDER_RSA_FULL);
-            cspParams.KeyContainerName = ContainerName;
+            cspParams.KeyContainerName = containerName;
             cspParams.Flags = CspProviderFlags.UseMachineKeyStore;
             cspParams.ProviderName =providername ;
 
-            RSACryptoServiceProvider  rsa = new RSACryptoServiceProvider(2048,cspParams);
+            RSACryptoServiceProvider  rsa = new RSACryptoServiceProvider(this._rsaKeySize,cspParams);
             RSAParameters privateKey = RSA.Create().ExportParameters(true);
 
             rsa.ImportParameters(privateKey);
@@ -74,42 +81,55 @@ namespace NaNCryptor.Cryption
             rsa.ImportParameters(publicKey);
             string publicKeyText = rsa.ToXmlString(false);
 
-            StreamWriter output1 = new StreamWriter(PulicKeyFileOutputPath);
+            StreamWriter output1 = new StreamWriter(pulicKeyFileOutputPath);
             output1.Write(publicKeyText,0,publicKeyText.Length);
 
-            StreamWriter output2 = new StreamWriter(PrivateKeyFileOutputPath);
+            StreamWriter output2 = new StreamWriter(privateKeyFileOutputPath);
             output2.Write(privateKeyText, 0, privateKeyText.Length);
 
             output1.Close();
             output2.Close();
         }
 
+        /// <summary>encrypt target file with rsa
+        /// <para>return true If Encryption is success</para>
+        /// </summary>
         public bool Encrypt(string publickey, SuccessCallback callback = null)
         {
-            if (inputpath == null || outputpath == null) return false;
+            if (encryptInputFilePath == null || encryptOutputFilePath == null) return false;
+
             if (!File.Exists(publickey)) throw new FileNotFoundException("Public Key File path was wrong!"); 
 
-            using (StreamReader publick = new StreamReader(publickey))
+            using (StreamReader keyReadStream = new StreamReader(publickey))
             {
                 string publickeyxml;
-                publickeyxml =publick.ReadToEnd();
-                publick.Close();
+                publickeyxml =keyReadStream.ReadToEnd();
+                keyReadStream.Close();
 
-                using (FileStream openFS = new FileStream(this.inputpath, FileMode.Open, FileAccess.Read))
+                using (FileStream openFileStream = new FileStream(this.encryptInputFilePath, FileMode.Open, FileAccess.Read))
                 {
-                    byte[] data = new byte[openFS.Length];
-                    openFS.Read(data, 0, data.Length);
-                    openFS.Close();
+                    byte[] data = new byte[openFileStream.Length];
+                    openFileStream.Read(data, 0, data.Length);
+                    openFileStream.Close();
 
-                    using (FileStream writeFS = new FileStream(this.outputpath, FileMode.Create, FileAccess.Write))
+                    using (FileStream writeFileStream = new FileStream(this.encryptOutputFilePath, FileMode.Create, FileAccess.Write))
                     {
                         using (RSACryptoServiceProvider provider = new RSACryptoServiceProvider(2048))
                         {
                             provider.FromXmlString(publickeyxml);
-                            byte[] encryptedByte=provider.Encrypt(data, false);
-                            writeFS.Write(encryptedByte, 0, encryptedByte.Length);
-                            writeFS.Close();
-                            SignFile();
+
+                            try
+                            {
+                                byte[] encryptedByte = provider.Encrypt(data, false);
+                                writeFileStream.Write(encryptedByte, 0, encryptedByte.Length);
+                                writeFileStream.Close();
+                            }
+                            catch (CryptographicException E)
+                            {
+                                return false;
+                            }
+
+                            SignifyFile();
                         }
                     }
                 }
@@ -118,9 +138,13 @@ namespace NaNCryptor.Cryption
                 return true;
         }
 
+        /// <summary>decrypt target file with rsa
+        /// <para>return true If Decryption is success</para>
+        /// </summary>
         public bool Decrypt(string privatekey, SuccessCallback callback = null)
         {
-            if (Decinputpath == null || Decoutputpath == null) { return false; }
+            if (decryptInputFilePath == null || decryptOutputFilePath == null) { return false; }
+
             if (!File.Exists(privatekey)) throw new FileNotFoundException("Public Key File path was wrong!");
 
             if (!VerifyFile())//hash checksum
@@ -129,22 +153,22 @@ namespace NaNCryptor.Cryption
                 return false;
             }
 
-            using (StreamReader privatek = new StreamReader(privatekey))
+            using (StreamReader privateKeyFileStream = new StreamReader(privatekey))
             {
                 string privatekeyxml;
 
-                privatekeyxml = privatek.ReadToEnd();
-                privatek.Close();
+                privatekeyxml = privateKeyFileStream.ReadToEnd();
+                privateKeyFileStream.Close();
 
-                using (FileStream openFS = new FileStream(this.Decinputpath, FileMode.Open, FileAccess.Read))
+                using (FileStream openFileStream = new FileStream(this.decryptInputFilePath, FileMode.Open, FileAccess.Read))
                 {
-                    int dataLength = (int)openFS.Length - (32 + signature.Length);
+                    int dataLength = (int)openFileStream.Length - (32 + _signature.Length);
                     byte[] data = new byte[dataLength];
 
-                    openFS.Position = (32 + signature.Length);
-                    openFS.Read(data, 0, data.Length);
+                    openFileStream.Position = (32 + _signature.Length);
+                    openFileStream.Read(data, 0, data.Length);
                 
-                    using (FileStream writeFS = new FileStream(this.Decoutputpath, FileMode.Create, FileAccess.Write))
+                    using (FileStream writeFileStream = new FileStream(this.decryptOutputFilePath, FileMode.Create, FileAccess.Write))
                     {
                         using (RSACryptoServiceProvider provider = new RSACryptoServiceProvider(2048))
                         {
@@ -152,13 +176,13 @@ namespace NaNCryptor.Cryption
                              try
                              {
                                 byte[] encryptedByte = provider.Decrypt(data, false);
-                                writeFS.Write(encryptedByte, 0, encryptedByte.Length);
+                                writeFileStream.Write(encryptedByte, 0, encryptedByte.Length);
                               }
                              catch (CryptographicException E)
                              {
                              return false;
                              }
-                            writeFS.Close();
+                            writeFileStream.Close();
 
                         }
                     }
@@ -168,23 +192,36 @@ namespace NaNCryptor.Cryption
             return true;
         }
 
-        private void SignFile()
+        /*
+      -File checksum-
+
+      Signify
+      1.do sha 256 with encrypted file's binary
+      2.write cipertext(32bytes) in the beginning of file by using streamwriter
+      3.write the rest 
+
+      Verify
+      1.read encryted file's binary by using streamreader
+      2.do sha 256 binary without 32bytes ciphertext in the beginning of binary
+      3.compare result to ciphertext  if comparing is true,func return true or return false
+      */
+        private void SignifyFile()
         {
             byte[] key = Encoding.UTF8.GetBytes("NaNCryptor");
 
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {
-                using (FileStream inoutstream = new FileStream(this.outputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                using (FileStream _fileStream = new FileStream(this.encryptOutputFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
-                    byte[] binarydata = new byte[inoutstream.Length];
+                    byte[] binarydata = new byte[_fileStream.Length];
                     byte[] hashValue;
 
-                    inoutstream.Read(binarydata, 0, binarydata.Length);
+                    _fileStream.Read(binarydata, 0, binarydata.Length);
                     hashValue = hmac.ComputeHash(binarydata);
-                    inoutstream.Position = 0;
-                    inoutstream.Write(signature, 0, signature.Length);
-                    inoutstream.Write(hashValue, 0, hashValue.Length);
-                    inoutstream.Write(binarydata, 0, binarydata.Length);
+                    _fileStream.Position = 0;
+                    _fileStream.Write(_signature, 0, _signature.Length);
+                    _fileStream.Write(hashValue, 0, hashValue.Length);
+                    _fileStream.Write(binarydata, 0, binarydata.Length);
                 }
             }
             return;
@@ -196,17 +233,17 @@ namespace NaNCryptor.Cryption
 
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {
-                using (FileStream inoutstream = new FileStream(this.Decinputpath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                using (FileStream _fileStream = new FileStream(this.decryptInputFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
                 {
                     int hashsize = (hmac.HashSize / 8);
                     byte[] binarydata = new byte[hashsize];
-                    byte[] checksum = new byte[(inoutstream.Length - hashsize) - signature.Length];
-                    byte[] sig = new byte[this.signature.Length];
+                    byte[] checksum = new byte[(_fileStream.Length - hashsize) - _signature.Length];
+                    byte[] sig = new byte[this._signature.Length];
 
-                    inoutstream.Read(sig, 0, sig.Length);
-                    if (!sig.SequenceEqual(this.signature)) return (sig == signature);
-                    inoutstream.Read(binarydata, 0, hashsize);
-                    inoutstream.Read(checksum, 0, checksum.Length);
+                    _fileStream.Read(sig, 0, sig.Length);
+                    if (!sig.SequenceEqual(this._signature)) return (sig == _signature);
+                    _fileStream.Read(binarydata, 0, hashsize);
+                    _fileStream.Read(checksum, 0, checksum.Length);
 
                     return binarydata.SequenceEqual(hmac.ComputeHash(checksum));
                 }
