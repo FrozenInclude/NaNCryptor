@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.Windows.Forms;
 using System.IO;
 using System.Management;
 
@@ -104,7 +105,7 @@ namespace NaNCryptor.Cryption.USB
                     writeFileStream.Close();
                     openFileStream.Close();
 
-               //     SignFile(Key);
+                    SignifyFile(device);
                 }
             }
             callback?.Invoke();
@@ -123,11 +124,11 @@ namespace NaNCryptor.Cryption.USB
             byte[] Key = secret.GetBytes(32);
             byte[] IV = secret.GetBytes(16);
 
-        //    if (!VerifyFile(Key))//hash checksum
-          //  {
-          //      MessageBox.Show("signed Hash value is not right!");
-         //       return false;
-       //     }
+           if (!VerifyFile(device))//hash checksum
+           {
+                MessageBox.Show("signed Hash value is not right!");
+                return false;
+           }
 
             using (FileStream openFileStream = new FileStream(this.decryptInputFilePath, FileMode.Open, FileAccess.Read))
             {
@@ -162,23 +163,56 @@ namespace NaNCryptor.Cryption.USB
                     _fileStream.Read(binarydata, 0, binarydata.Length);
 
                     hashValue = hmac.ComputeHash(binarydata);
-
-                    _fileStream.Position = 0;
-
+                
+                     _fileStream.Position = 0;
                     _fileStream.Write(_signature, 0, _signature.Length);
-
                     _fileStream.Write(deviceIdHash, 0, deviceIdHash.Length);
-
                     _fileStream.Write(pnpDeviceIdHash, 0, pnpDeviceIdHash.Length);
-
                     _fileStream.Write(descriptionHash, 0, descriptionHash.Length);
-
                     _fileStream.Write(hashValue, 0, hashValue.Length);
-
                     _fileStream.Write(binarydata, 0, binarydata.Length);
                 }
             }
             return;
+        }
+        private bool VerifyFile(USBDeviceInfo device)
+        {
+           byte[] key =Encoding.Default.GetBytes(GenerateUSBKey(device));
+
+            using (HMACSHA256 hmac = new HMACSHA256(key))
+            {
+                using (FileStream _filestream = new FileStream(this.decryptInputFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                {
+                    int hashsize = (hmac.HashSize / 8);
+
+                    byte[] deviceIdHash = hmac.ComputeHash(Encoding.Default.GetBytes(device.DeviceID));
+                    byte[] pnpDeviceIdHash = hmac.ComputeHash(Encoding.Default.GetBytes(device.PnpDeviceID));
+                    byte[] descriptionHash = hmac.ComputeHash(Encoding.Default.GetBytes(device.Description));
+
+                    byte[] deviceId = new byte[hashsize];
+                    byte[] pnpDeviceId = new byte[hashsize];
+                    byte[] description= new byte[hashsize]; 
+                    byte[] binarydata = new byte[hashsize];
+                    byte[] checksum = new byte[(_filestream.Length - hashsize*3) - _signature.Length];
+                    byte[] sig = new byte[this._signature.Length];
+
+
+                    _filestream.Read(sig, 0, sig.Length);
+
+                    if (!sig.SequenceEqual(this._signature)) return (sig == _signature);
+
+                    _filestream.Read(deviceId, 0, hashsize);
+                    _filestream.Read(pnpDeviceId, 0, hashsize);
+                    _filestream.Read(description, 0, hashsize);
+                    _filestream.Read(binarydata, 0, hashsize);
+                    _filestream.Read(checksum, 0, checksum.Length);
+                    
+                    if( (!deviceId.SequenceEqual(deviceIdHash)) || (!pnpDeviceId.SequenceEqual(pnpDeviceIdHash)) || (!description.SequenceEqual(descriptionHash)) )
+                    return false;
+
+                    return binarydata.SequenceEqual(hmac.ComputeHash(checksum));
+                }
+            }
         }
     }
 }

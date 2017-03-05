@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace NaNCryptor.Cryption
 {
-    public class AesFileCryptor
+    public class AesFileCrypter
     {
         /// <summary>
         /// CallBack delegate for en/decryption success notification
@@ -32,10 +32,10 @@ namespace NaNCryptor.Cryption
         /// <para>CipherMode:<seealso cref="CipherMode.CBC"/></para>
         ///<para>PaddingMode:<seealso cref="PaddingMode.PKCS7"/></para>
         /// </summary>
-        public AesFileCryptor() : this(CipherMode.CBC,PaddingMode.PKCS7) { }
-        public AesFileCryptor(CipherMode cipermod) : this(cipermod, PaddingMode.PKCS7) { }
-        public AesFileCryptor(PaddingMode padmod) : this(CipherMode.CBC,padmod) { }
-        public AesFileCryptor(CipherMode cipermod,PaddingMode padmod)
+        public AesFileCrypter() : this(CipherMode.CBC,PaddingMode.PKCS7) { }
+        public AesFileCrypter(CipherMode cipermod) : this(cipermod, PaddingMode.PKCS7) { }
+        public AesFileCrypter(PaddingMode padmod) : this(CipherMode.CBC,padmod) { }
+        public AesFileCrypter(CipherMode cipermod,PaddingMode padmod)
         {
            this._ciphermode = cipermod;
            this._padding =padmod;
@@ -50,6 +50,8 @@ namespace NaNCryptor.Cryption
 
             this.encryptInputFilePath = input;
             this.encryptOutputFilePath = output;
+
+            return;
         }
 
         /// <summary>
@@ -61,6 +63,8 @@ namespace NaNCryptor.Cryption
 
             this.decryptInputFilePath = input;
             this.decryptOutputFilePath = output;
+
+            return;
         }
 
         /// <summary>encrypt target file with aes
@@ -96,7 +100,7 @@ namespace NaNCryptor.Cryption
                     writeFileStream.Close();
                     openFileStream.Close();
 
-                    SignFile(Key);
+                    SignifyFile(Key);
                 }
             }
             callback?.Invoke();
@@ -155,7 +159,7 @@ namespace NaNCryptor.Cryption
         2.do sha 256 binary without 32bytes ciphertext in the beginning of binary
         3.compare result to ciphertext  if comparing is true,func return true or return false
         */
-        private void SignFile(byte[] key)
+        private void SignifyFile(byte[] key)
         {
             using (HMACSHA256 hmac = new HMACSHA256(key))
             {

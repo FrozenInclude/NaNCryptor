@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace NaNCryptor.Cryption
 {
-    public class RsaFileCryptor
+    public class RsaFileCrypter
     {
         /// <summary>
         /// CallBack delegate for en/decryption success notification
@@ -26,7 +26,7 @@ namespace NaNCryptor.Cryption
         private readonly byte[] _signature = Encoding.UTF8.GetBytes(("RSA"));
         private int _rsaKeySize;
 
-        public RsaFileCryptor(int KeySize = 2048)
+        public RsaFileCrypter(int KeySize = 2048)
         {
             this._rsaKeySize = KeySize;
         }
@@ -41,6 +41,8 @@ namespace NaNCryptor.Cryption
 
             this.encryptInputFilePath = input;
             this.encryptOutputFilePath = output;
+
+            return;
         }
 
         /// <summary>
@@ -52,6 +54,8 @@ namespace NaNCryptor.Cryption
 
             this.decryptInputFilePath = input;
             this.decryptOutputFilePath = output;
+
+            return;
         }
 
         /// <summary>
@@ -89,6 +93,8 @@ namespace NaNCryptor.Cryption
 
             output1.Close();
             output2.Close();
+
+            return;
         }
 
         /// <summary>encrypt target file with rsa

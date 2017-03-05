@@ -47,17 +47,18 @@ namespace NaNCryptor.MVVM
 
         private void encryption()
         {
+            NaNCryptor.Cryption.USB.USBFileCrypter a = new Cryption.USB.USBFileCrypter();
             /*    AesFileCryptor a = new AesFileCryptor();
                 a.setEnCryptorPath(@"C:\write.txt", @"c:\writqe.en");
                 a.Encrypt("16", success);
                 a.setDeCryptorPath(@"C:\writqe.en", @"c:\writese.txt");
                 a.Decrypt("16", success);*/
-           RsaFileCryptor a = new RsaFileCryptor();
+        /*   RsaFileCrypter a = new RsaFileCrypter();
             a.GenerateKey("nimi", @"C:\nimi.public",@"C:\nimi.private");
              a.SetEnCryptionPath(@"C:\write.txt", @"c:\writqe.enz");
            a.Encrypt(@"C:\nimi.public", success);
          a.SetDeCryptionPath(@"C:\writqe.enz", @"c:\writeseq.txt");
-         a.Decrypt(@"C:\nimi.private", success);
+         a.Decrypt(@"C:\nimi.private", success);*/
         }
         private void success()
         {
